@@ -8,5 +8,5 @@ Each game consists of a ROS node and a corresponding Blockly game (created using
 - ROS node: migrave_game_imitation.py
 - Blockly game: rfh-koeln/MIGRAVE/ROS/Imitation
 
-![Imitation](https://ixpduesseldorf-my.sharepoint.com/:i:/g/personal/rainer_speicher_ixpduesseldorf_onmicrosoft_com/EfzVIYUbYuBAi6LJepFZ244BfkaSuk05rRi0aQPJUSYmlw?e=XIo59O)
+![Imitation](https://i.ibb.co/wKystWK/imitation.png)
 
