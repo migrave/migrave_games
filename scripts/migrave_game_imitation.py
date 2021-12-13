@@ -175,7 +175,7 @@ class migrave_game_imitation:
                 self.correct += 1
                 rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
 
-                # Start over when only correct 3 times in the first 5 rounds
+                # Restart if correct no more than 3 times in the first 5 rounds
                 if self.count == 5 and self.correct <= 3:
                     self.count = 0
                     self.correct = 0
@@ -232,10 +232,7 @@ class migrave_game_imitation:
                 self.count += 1
                 rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
 
-                if self.count < 5:
-                    rospy.sleep(2)
-                    self.start_new_round_and_grade()
-
+                # Restart if correct no more than 3 times in the first 5 rounds
                 if self.count == 5 and self.correct <= 3:
                     self.count = 0
                     self.correct = 0
@@ -244,6 +241,12 @@ class migrave_game_imitation:
                         "Lass uns die Bewegung nochmal üben!")
                     rospy.sleep(4)
                     self.start_new_round_and_grade()
+                else:  # next round for other cases
+                    rospy.sleep(2)
+                    self.start_new_round_and_grade()
+                # if self.count < 5:
+                #     rospy.sleep(2)
+                #     self.start_new_round_and_grade()
 
         else:
             rospy.sleep(2)
@@ -259,7 +262,7 @@ class migrave_game_imitation:
             self.gesturePlay_pub.publish(gesture)
             rospy.sleep(6)
             if self.count == 5 and self.correct == 4:
-                rospy.loginfo("54 case")
+                rospy.loginfo("80% correctness case")
                 if result == "Right":
                     self.count += 1
                     self.correct += 1
