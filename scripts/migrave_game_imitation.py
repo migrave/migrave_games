@@ -185,7 +185,7 @@ class migrave_game_imitation:
                     rospy.loginfo(image)
                     self.tablet_image_pub.publish(image)
                     rospy.sleep(6)
-                    rospy.loginfo("Endding")
+                    rospy.loginfo("Ending")
                     rospy.loginfo(
                         f"Count: {self.count}; Correct: {self.correct}")
                     self.finish_one_task()
@@ -209,31 +209,11 @@ class migrave_game_imitation:
 
                     self.start_new_round_and_grade()
 
-            # # if almost right, start a new round
-            # if result == "Almost_right":
-            #     self.migrave_show_emotion("showing_smile")
-            #     self.migrave_talk_text("Noch ein mal!")
-            #     self.start_new_round_and_grade()
-
             if result == "wrong":
                 self.count += 1
                 rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
                 self.retry_after_wrong()
 
-                # # Restart if correct no more than 3 times in the first 5 rounds
-                # if self.count == 5 and self.correct <= 3:
-                #     self.count = 0
-                #     self.correct = 0
-                #     rospy.sleep(1)
-                #     self.migrave_talk_text(
-                #         "Lass uns die Bewegung nochmal üben!")
-                #     self.start_new_round_and_grade()
-                # else:  # next round for other cases
-                #     rospy.sleep(2)
-                #     self.start_new_round_and_grade()
-                # # if self.count < 5:
-                # #     rospy.sleep(2)
-                # #     self.start_new_round_and_grade()
             if result == "right_after_wrong":
                 self.start_new_round_and_grade()
 
@@ -297,7 +277,7 @@ class migrave_game_imitation:
                     self.retry_after_wrong()
 
             if self.correct == 5:  # finish the task when correct 5 times
-                rospy.loginfo("Endding")
+                rospy.loginfo("Ending")
                 rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
                 self.finish_one_task()
 
