@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 import rospy
 from std_msgs.msg import String, Bool
+from qt_robot_interface.srv import (
+    behavior_talk_text,
+    emotion_show,
+    audio_play,
+)
+from qt_gesture_controller.srv import gesture_play
 import random
 
 
@@ -55,25 +61,27 @@ class migrave_game_emotions:
         )
 
         # Initialization
+        # robot setting
+        self.gesture_speed = 1.0
+        # game parameters
         self.count = 0
         self.correct = 0
-        self.redo_result = None
-        self.regraded = False
         self.game_status = "Waiting"
         self.result = "Waiting"
         self.task = "Waiting"
+        self.emotion = "Waiting"
         self.emotion_image = "Nix"
 
         self.tasks = ["happy", "sad", "happy_vs_sad",
                       "sad_vs_happy", "happy_or_sad"]
         self.images_happy = ["Happy1", "Happy2"]
         self.images_sad = ["Sad1", "Sad2"]
-        self.images_mixed = [
-            ["Happy1", "Sad1"],
-            ["Sad2", "Happy2"],
-            ["Happy2", "Sad1"],
-            ["Sad2", "Happy1"],
-        ]
+        # self.images_mixed = [
+        #     ["Happy1", "Sad1"],
+        #     ["Sad2", "Happy2"],
+        #     ["Happy2", "Sad1"],
+        #     ["Sad2", "Happy1"],
+        # ]
 
     def game_status_callback(self, msg):
         self.game_status = msg.data
@@ -87,35 +95,28 @@ class migrave_game_emotions:
         self.game_grade()
 
     def game_start(self):
-        if self.game_status == "Start":
+        if self.game_status == "start":
             self.count = 0
             self.correct = 0
             # Introduction
             rospy.loginfo("Game starts!")
             rospy.loginfo("Start intro")
-            self.talkText_pub.publish("Jetzt üben wir Gefühle erkennen.")
-            rospy.sleep(2)
-            self.talkText_pub.publish("Los geht's!")
-            rospy.sleep(3)
-            self.emotionShow_pub.publish("showing_smile")
-            rospy.sleep(2)
-            self.talkText_pub.publish(
+            self.migrave_talk_text("Jetzt üben wir Gefühle erkennen.")
+            self.migrave_talk_text("Los geht's!")
+            self.migrave_show_emotion("showing_smile")
+            self.migrave_talk_text(
                 "Hände auf den Tisch, schau mich an. Los geht's!")
-            rospy.sleep(2)
-            self.emotionShow_pub.publish("showing_smile")
-            rospy.sleep(2)
-            self.talkText_pub.publish(
+            self.migrave_show_emotion("showing_smile")
+            self.migrave_talk_text(
                 "Ich nenne dir ein Gefühl. Du tippst auf das passende Bild."
             )
-            rospy.sleep(6)
             rospy.loginfo("End of intro")
 
     def task_start(self):
         if self.game_status in self.tasks:
             self.count = 0
             self.correct = 0
-            self.talkText_pub.publish("Schau auf das Tablet!")
-            rospy.sleep(2)
+            self.migrave_talk_text("Schau auf das Tablet!")
             self.task = self.game_status
             rospy.loginfo(f"Task: {self.task}")
 
@@ -128,6 +129,10 @@ class migrave_game_emotions:
             # Show image
             if self.task == "happy":
                 self.emotion = "glückliche"
+                self.emotion_pub.publish(self.emotion)
+                rospy.loginfo(f"Publish emotion: {self.emotion}")
+                rospy.sleep(1)
+
                 self.emotion_image = random.choice(self.images_happy)
                 rospy.loginfo(f"Show image: {self.emotion_image}")
                 self.tablet_image_pub.publish(self.emotion_image)
@@ -135,6 +140,10 @@ class migrave_game_emotions:
 
             if self.task == "sad":
                 self.emotion = "traurige"
+                self.emotion_pub.publish(self.emotion)
+                rospy.loginfo(f"Emtion: {self.emotion}")
+                rospy.sleep(1)
+
                 self.emotion_image = random.choice(self.images_sad)
                 rospy.loginfo(f"Show image: {self.emotion_image}")
                 self.tablet_image_pub.publish(self.emotion_image)
@@ -152,13 +161,16 @@ class migrave_game_emotions:
                 self.emotion = "glückliche"
                 rospy.loginfo(self.images)
                 rospy.loginfo(self.correct_image)
+
+                self.emotion_pub.publish(self.emotion)
+                rospy.loginfo(f"Publish emotion: {self.emotion}")
+                rospy.sleep(1)
+
                 self.tablet_image_pub.publish(self.images[0])
                 rospy.sleep(1)
                 self.tablet_image_pub.publish(self.images[1])
                 rospy.sleep(1)
                 self.tablet_image_pub.publish(self.image_x)
-                rospy.sleep(1)
-                self.emotion_pub.publish(self.emotion)
                 rospy.sleep(1)
                 self.correct_image_pub.publish(str(self.correct_image))
                 rospy.sleep(1)
@@ -175,13 +187,15 @@ class migrave_game_emotions:
                 self.emotion = "traurige"
                 rospy.loginfo(self.images)
                 rospy.loginfo(self.correct_image)
+
+                self.emotion_pub.publish(self.emotion)
+                rospy.sleep(1)
+
                 self.tablet_image_pub.publish(self.images[0])
                 rospy.sleep(1)
                 self.tablet_image_pub.publish(self.images[1])
                 rospy.sleep(1)
                 self.tablet_image_pub.publish(self.image_x)
-                rospy.sleep(1)
-                self.emotion_pub.publish(self.emotion)
                 rospy.sleep(1)
                 self.correct_image_pub.publish(str(self.correct_image))
                 rospy.sleep(1)
@@ -223,14 +237,12 @@ class migrave_game_emotions:
         result = self.result
         # Feedback after grading
         feedback_emotions = {
-            "Right": "showing_smile",
-            "Right_1": "showing_smile",
-            "Right_2": "showing_smile",
-            "Almost_right": "showing_smile",
-            "Wrong": "",
-            "Wrong_1": "",
-            "Wrong_2": "",
-            "Wrong_3": "",
+            "right": "showing_smile",
+            "right_1": "showing_smile",
+            "right_2": "showing_smile",
+            "wrong": "",
+            "wrong_1": "",
+            "wrong_2": "",
         }
         right_texts = {
             "happy": "Richtig, die Person zeigt ein glückliches Gesicht. Wunderbar!",
@@ -239,203 +251,175 @@ class migrave_game_emotions:
             "sad_vs_happy": "Richtig, die Person zeigt ein trauriges Gesicht. Wunderbar!",
             "sad_or_happy": f"Richtig, die Person zeigt ein {self.emotion}s Gesicht. Wunderbar!",
         }
-        almost_right_texts = {
-            "happy": "Richtig, die Person zeigt ein glückliches Gesicht. Wunderbar!",
-            "sad": "Richtig, die Person zeigt ein trauriges Gesicht. Wunderbar!",
-            "happy_vs_sad": "Richtig, die Person zeigt ein glückliches Gesicht. Wunderbar!",
-            "sad_vs_happy": "Richtig, die Person zeigt ein trauriges Gesicht. Wunderbar!",
-            "sad_or_happy": f"Richtig, die Person zeigt ein {self.emotion}s Gesicht. Wunderbar!",
-        }
         feedback_texts = {
-            "Right": right_texts[self.task],
-            "Right_1": right_texts[self.task],
-            "Right_2": right_texts[self.task],
-            "Almost_right": almost_right_texts[self.task],
-            "Wrong": "Schau nochmal genau hin!",
-            "Wrong_1": "Schau nochmal genau hin!",
-            "Wrong_2": "Schau nochmal genau hin!",
-            "Wrong_3": "Schau nochmal genau hin!",
+            "right": right_texts[self.task],
+            "right_1": right_texts[self.task],
+            "right_2": right_texts[self.task],
+            "wrong": "Schau nochmal genau hin!",
+            "wrong_1": "Schau nochmal genau hin!",
+            "wrong_2": "Schau nochmal genau hin!",
         }
         feedback_gestures = {
-            "Right": "QT/clapping",
-            "Right_1": "QT/clapping",
-            "Right_2": "QT/clapping",
-            "Almost_right": "",
-            "Wrong": "",
-            "Wrong_1": "",
-            "Wrong_2": "",
-            "Wrong_3": "",
+            "right": "QT/clapping",
+            "right_1": "QT/clapping",
+            "right_2": "QT/clapping",
+            "wrong": "",
+            "wrong_1": "",
+            "wrong_2": "",
         }
 
         if self.count < 5:
             # Reaction after grading
             emotion = feedback_emotions[result]
-            self.emotionShow_pub.publish(emotion)
+            self.migrave_show_emotion(emotion)
             text = feedback_texts[result]
-            self.talkText_pub.publish(text)
-            rospy.sleep(2)
+            self.migrave_talk_text(text)
             gesture = feedback_gestures[result]
-            self.gesturePlay_pub.publish(gesture)
-            rospy.sleep(6)
+            self.migrave_gesture_play(gesture)
 
-            if self.result == "Right":
+            if self.result == "right":
                 self.count += 1
                 self.correct += 1
                 rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
 
-                # Start over when only correct 3 times in the first 5 rounds
-                if self.count == 5 and self.correct <= 3:
-                    self.count = 0
-                    self.correct = 0
-                    self.talkText_pub.publish("Neue Runde")
-                    rospy.sleep(2)
-                    rospy.loginfo("Restart the game")
-                    self.start_new_round_and_grade()
-
-                # Finish the task when correct 5 times in the first 5 rounds
-                elif self.count == 5 and self.correct == 5:
-                    self.talkText_pub.publish(
+                # Finish the task when correct >= 4 times in the first 5 rounds
+                if self.count == 5 and self.correct >= 4:
+                    self.migrave_talk_text(
                         "Dafür bekommst du einen Stern! Schau mal auf das Tablet."
                     )
-                    rospy.sleep(4)
-                    self.talkAudio_pub.publish("rfh-koeln/MIGRAVE/Reward2")
-                    rospy.sleep(2)
+                    self.migrave_audio_play("rfh-koeln/MIGRAVE/Reward2")
                     image = f"{self.correct}Token"
                     rospy.loginfo(image)
                     self.tablet_image_pub.publish(image)
                     rospy.sleep(6)
+                    rospy.loginfo("Ending")
+                    rospy.loginfo(
+                        f"Count: {self.count}; Correct: {self.correct}")
+                    self.finish_one_task()
 
                 # For other cases, start a new round
                 else:
                     rospy.loginfo("Continue")
-                    self.talkText_pub.publish(
+                    self.migrave_talk_text(
                         "Dafür bekommst du einen Stern! Schau mal auf das Tablet."
                     )
-                    rospy.sleep(4)
-                    self.talkAudio_pub.publish("rfh-koeln/MIGRAVE/Reward2")
-                    rospy.sleep(2)
-                    image = f"{self.correct}Token"
-                    rospy.loginfo(image)
+                    self.migrave_audio_play("rfh-koeln/MIGRAVE/Reward2")
 
-                    self.tablet_image_pub.publish(image)
+                    image = f"{self.correct}Token"
                     rospy.loginfo(f"Publish image: {self.correct}Token")
                     rospy.sleep(6)
 
-                    self.emotionShow_pub.publish("showing_smile")
-                    rospy.sleep(2)
-                    self.talkText_pub.publish("Noch ein mal!")
-                    rospy.sleep(2)
+                    self.migrave_show_emotion("showing_smile")
+                    self.migrave_talk_text("Noch ein mal!")
 
                     self.start_new_round_and_grade()
 
-            # if almost right, start a new round
-            if result == "Almost_right":
-                self.emotionShow_pub.publish("showing_smile")
-                rospy.sleep(2)
-                self.talkText_pub.publish("Noch ein mal!")
-                rospy.sleep(2)
-                self.start_new_round_and_grade()
-
-            if result == "Wrong":
+            if result == "wrong":
                 self.count += 1
                 rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
+                self.retry_after_wrong()
 
-                if self.count < 5:
-                    rospy.sleep(2)
-                    self.start_new_round_and_grade()
-
-                if self.count == 5 and self.correct <= 3:
-                    self.count = 0
-                    self.correct = 0
-                    rospy.sleep(1)
-                    self.talkText_pub.publish(
-                        "Lass uns die Bewegung nochmal üben!")
-                    rospy.sleep(4)
-                    self.start_new_round_and_grade()
-
-            # For happy_vs_sad
-            if result == "Right_1" or result == "Right_2":
-                self.emotionShow_pub.publish("showing_smile")
-                rospy.sleep(2)
-                self.talkText_pub.publish("Noch ein mal!")
-                rospy.sleep(2)
+            if result in ["right_1", "right_2"]:
+                self.migrave_show_emotion("showing_smile")
+                self.migrave_talk_text("Noch ein mal!")
                 self.start_new_round_and_grade()
+            if result in ["wrong_1", "wrong_2"]:
+                self.retry_after_wrong()
 
-            if result == "Wrong_1":
-                self.count += 1
-                rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
-
-                if self.count == 5 and self.correct <= 3:
-                    self.count = 0
-                    self.correct = 0
-                    rospy.sleep(1)
-                    self.talkText_pub.publish(
-                        "Lass uns die Bewegung nochmal üben!")
-                    rospy.sleep(4)
-            if result == "Wrong_2" or result == "Wrong_3":
-                rospy.loginfo(f"{result}")
-
-        else:
-            rospy.sleep(2)
-            # self.gesturePlay_pub.publish("QT/imitation/hands-up-back")
-            rospy.sleep(4)
+        else:  # self.count = 5, self.correct <=4 at the first iteration
             emotion = feedback_emotions[result]
-            self.emotionShow_pub.publish(emotion)
+            self.migrave_show_emotion(emotion)
             text = feedback_texts[result]
-            self.talkText_pub.publish(text)
-            rospy.sleep(2)
+            self.migrave_talk_text(text)
             gesture = feedback_gestures[result]
-            self.gesturePlay_pub.publish(gesture)
-            rospy.sleep(6)
+            self.migrave_gesture_play(gesture)
+
             if self.count == 5 and self.correct == 4:
-                rospy.loginfo("54 case")
-                if result == "Right":
+                rospy.loginfo("80% correctness case")
+                if result == "right":
                     self.count += 1
                     self.correct += 1
                     rospy.loginfo(
                         f"Count: {self.count}; Correct: {self.correct}")
-                    self.talkText_pub.publish(
+                    self.migrave_talk_text(
                         "Dafür bekommst du einen Stern! Schau mal auf das Tablet."
                     )
-                    rospy.sleep(4)
-                    self.talkAudio_pub.publish("rfh-koeln/MIGRAVE/Reward2")
-                    rospy.sleep(2)
+                    self.migrave_audio_play("rfh-koeln/MIGRAVE/Reward2")
                     image = f"{self.correct}Token"
                     rospy.loginfo(image)
 
                     self.tablet_image_pub.publish(image)
                     rospy.loginfo(f"Publish image: {self.correct}Token")
                     rospy.sleep(6)
-                elif result == "Almost_right" or "Right_1" or "Right_2":
-                    self.emotionShow_pub.publish("showing_smile")
-                    rospy.sleep(2)
-                    self.talkText_pub.publish("Noch ein mal!")
-                    rospy.sleep(2)
+                elif result in ["wrong", "wrong_1", "wrong_2"]:
+                    # self.migrave_show_emotion("showing_smile")
+                    # self.migrave_talk_text("Noch ein mal!")
+                    self.retry_after_wrong()
+                else:  # right_after_wrong
+                    self.migrave_talk_text("Noch ein mal")
                     self.start_new_round_and_grade()
-                elif result == "Wrong_1" or "Wrong_2" or "Wrong_3":
-                    rospy.loginfo(f"{result}")
-                else:  # Wrong
-                    self.start_new_round_and_grade()
+            if self.count == 5 and self.correct <= 3:
+                rospy.loginfo("less than 80% correctness case")
+                if result == "right":
+                    self.correct += 1
+                    rospy.loginfo(
+                        f"Count: {self.count}; Correct {self.correct}")
+                    self.migrave_talk_text(
+                        "Dafür bekommst du einen Stern! Schau mal auf das Tablet."
+                    )
+                    self.migrave_audio_play("rfh-koeln/MIGRAVE/Reward2")
 
-        if self.correct == 5:
-            rospy.loginfo("Endding")
-            rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
-            self.finish_one_task()
+                    image = f"{self.correct}Token"
+                    rospy.loginfo(image)
+                    self.tablet_image_pub.publish(image)
+                    rospy.loginfo(f"Publish image: {self.correct}Token")
+                    rospy.sleep(6)
+                    if self.correct < 5:
+                        self.migrave_talk_text("Noch ein mal!")
+                        self.start_new_round_and_grade()
+                if result in ["right_1", "right_2"]:
+                    self.migrave_talk_text("Noch ein mal!")
+                    self.start_new_round_and_grade()
+                if result in ["wrong", "wrong_1", "wrong_2"]:
+                    self.retry_after_wrong()
+
+            if self.correct == 5:
+                rospy.loginfo("Ending")
+                rospy.loginfo(f"Count: {self.count}; Correct: {self.correct}")
+                self.finish_one_task()
+
+    def retry_after_wrong(self):
+        self.game_status_pub.publish("Running")
+        rospy.loginfo("Publish status: Running")
+        rospy.sleep(2)
+        # self.migrave_talk_text("Schau auf das Tablet!")
 
     def start_new_round_and_grade(self):
         self.game_status_pub.publish("Running")
         rospy.loginfo("Publish status: Running")
         rospy.sleep(2)
-        self.talkText_pub.publish("Schau auf das Tablet!")
-        rospy.sleep(2)
 
         # Show image
         if self.task == "happy":
+            self.emotion_pub.publish(self.emotion)
+            rospy.loginfo(f"Emtion: {self.emotion}")
+            # rospy.sleep(1)
+
+            self.migrave_talk_text("Schau auf das Tablet!")
+            rospy.sleep(1)
+
             self.emotion_image = random.choice(self.images_happy)
             rospy.loginfo(f"Show image: {self.emotion_image}")
             self.tablet_image_pub.publish(self.emotion_image)
             rospy.sleep(2)
         if self.task == "sad":
+            self.emotion_pub.publish(self.emotion)
+            rospy.loginfo(f"Emtion: {self.emotion}")
+            # rospy.sleep(1)
+
+            self.migrave_talk_text("Schau auf das Tablet!")
+            rospy.sleep(1)
+
             self.emotion_image = random.choice(self.images_sad)
             rospy.loginfo(f"Show image: {self.emotion_image}")
             self.tablet_image_pub.publish(self.emotion_image)
@@ -453,13 +437,16 @@ class migrave_game_emotions:
             self.emotion = "glückliche"
             rospy.loginfo(self.images)
             rospy.loginfo(self.correct_image)
+            self.emotion_pub.publish(self.emotion)
+            # rospy.sleep(1)
+            self.migrave_talk_text("Schau auf das Tablet!")
+            rospy.sleep(1)
+
             self.tablet_image_pub.publish(self.images[0])
             rospy.sleep(1)
             self.tablet_image_pub.publish(self.images[1])
             rospy.sleep(1)
             self.tablet_image_pub.publish(self.image_x)
-            rospy.sleep(1)
-            self.emotion_pub.publish(self.emotion)
             rospy.sleep(1)
             self.correct_image_pub.publish(str(self.correct_image))
             rospy.sleep(1)
@@ -476,13 +463,16 @@ class migrave_game_emotions:
             self.emotion = "traurige"
             rospy.loginfo(self.images)
             rospy.loginfo(self.correct_image)
+            self.emotion_pub.publish(self.emotion)
+            # rospy.sleep(1)
+            self.migrave_talk_text("Schau auf das Tablet!")
+            rospy.sleep(1)
+
             self.tablet_image_pub.publish(self.images[0])
             rospy.sleep(1)
             self.tablet_image_pub.publish(self.images[1])
             rospy.sleep(1)
             self.tablet_image_pub.publish(self.image_x)
-            rospy.sleep(1)
-            self.emotion_pub.publish(self.emotion)
             rospy.sleep(1)
             self.correct_image_pub.publish(str(self.correct_image))
             rospy.sleep(1)
@@ -509,44 +499,86 @@ class migrave_game_emotions:
             rospy.loginfo(self.emotion)
             rospy.loginfo(self.images)
             rospy.loginfo(self.correct_image)
+
+            self.emotion_pub.publish(self.emotion)
+
+            self.migrave_talk_text("Schau auf das Tablet!")
+            rospy.sleep(1)
+
             self.tablet_image_pub.publish(self.images[0])
             rospy.sleep(1)
             self.tablet_image_pub.publish(self.images[1])
             rospy.sleep(1)
             self.tablet_image_pub.publish(self.image_x)
             rospy.sleep(1)
-            self.emotion_pub.publish(self.emotion)
-            rospy.sleep(1)
             self.correct_image_pub.publish(str(self.correct_image))
             rospy.sleep(1)
 
     def finish_one_task(self):
-        self.emotionShow_pub.publish("showing_smile")
-        rospy.sleep(1)
-        self.talkText_pub.publish("Geschafft! Das hast du super gemacht!")
-        rospy.sleep(3)
-        self.gesturePlay_pub.publish("QT/Dance/Dance-1-1")
-        rospy.sleep(6)
-        self.emotionShow_pub.publish("showing_smile")
-        rospy.sleep(2)
-        self.gesturePlay_pub.publish("QT/imitation/hands-up-back")
-        rospy.sleep(4)
-        self.game_status_pub.publish("Finish")
-        rospy.loginfo("Publish status: Finish")
-        rospy.sleep(4)
-        self.talkText_pub.publish(
+        self.migrave_show_emotion("showing_smile")
+        self.migrave_talk_text("Geschafft! Das hast du super gemacht!")
+        self.migrave_gesture_play("QT/Dance/Dance-1-1")
+        self.migrave_show_emotion("showing_smile")
+        self.migrave_gesture_play("QT/imitation/hands-up-back")
+        self.game_status_pub.publish("finish")
+        rospy.loginfo("Publish status: finish")
+        # rospy.sleep(4)
+        self.migrave_talk_text(
             "Schau mal auf das Tablet. Da ist ein Feuerwerk für dich!"
         )
-        rospy.sleep(2)
         self.tablet_image_pub.publish("Fireworks")
         rospy.loginfo("Publish image: Fireworks")
         # rospy.sleep(2)
-        self.talkAudio_pub.publish("rfh-koeln/MIGRAVE/Fireworks")
-        rospy.sleep(20)
-        self.tablet_image_pub.publish("Nix")
-        rospy.loginfo("Publish image: Nix")
+        self.migrave_audio_play("rfh-koeln/MIGRAVE/Fireworks")
+        # rospy.sleep(10)
+        # self.tablet_image_pub.publish("Nix")
+        # rospy.loginfo("Publish image: Nix")
         self.count = 0
         self.correct = 0
+
+    def migrave_show_emotion(self, emotion):
+        qt_emotion_show = rospy.ServiceProxy(
+            "/qt_robot/emotion/show", emotion_show)
+        # block/wait for ros service
+        rospy.wait_for_service("/qt_robot/emotion/show")
+        try:
+            # call the emotion show service
+            qt_emotion_show(emotion)
+        except rospy.ServiceException as e:
+            rospy.loginfo(f"Service call failed: {e}")
+
+    def migrave_talk_text(self, text):
+        qt_talk_text = rospy.ServiceProxy(
+            "/qt_robot/behavior/talkText", behavior_talk_text
+        )
+        # block/wait for ros service
+        rospy.wait_for_service("/qt_robot/behavior/talkText")
+        try:
+            # call the talk text service
+            qt_talk_text(text)
+        except rospy.ServiceException as e:
+            rospy.loginfo(f"Service call failed: {e}")
+
+    def migrave_gesture_play(self, gesture):
+        qt_gesture_play = rospy.ServiceProxy(
+            "/qt_robot/gesture/play", gesture_play)
+        # block/wait for ros service
+        rospy.wait_for_service("/qt_robot/gesture/play")
+        try:
+            # call the gesture play service
+            qt_gesture_play(gesture, self.gesture_speed)
+        except rospy.ServiceException as e:
+            rospy.loginfo(f"Service call failed: {e}")
+
+    def migrave_audio_play(self, audio):
+        qt_audio_play = rospy.ServiceProxy("/qt_robot/audio/play", audio_play)
+        # block/wait for ros service
+        rospy.wait_for_service("/qt_robot/audio/play")
+        try:
+            # call the audio play service
+            qt_audio_play(audio, "")
+        except rospy.ServiceException as e:
+            rospy.loginfo(f"Service call failed: {e}")
 
 
 if __name__ == "__main__":
