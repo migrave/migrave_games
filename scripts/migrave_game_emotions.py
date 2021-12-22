@@ -121,9 +121,9 @@ class migrave_game_emotions:
             rospy.loginfo(f"Task: {self.task}")
 
             # Update game status
-            self.game_status = "Running"
-            self.game_status_pub.publish("Running")
-            rospy.loginfo("Publish status: Running")
+            self.game_status = "running"
+            self.game_status_pub.publish("running")
+            rospy.loginfo("Publish status: running")
             rospy.sleep(2)
 
             # Show image
@@ -131,7 +131,7 @@ class migrave_game_emotions:
                 self.emotion = "glückliche"
                 self.emotion_pub.publish(self.emotion)
                 rospy.loginfo(f"Publish emotion: {self.emotion}")
-                rospy.sleep(1)
+                rospy.sleep(2)
 
                 self.emotion_image = random.choice(self.images_happy)
                 rospy.loginfo(f"Show image: {self.emotion_image}")
@@ -142,7 +142,7 @@ class migrave_game_emotions:
                 self.emotion = "traurige"
                 self.emotion_pub.publish(self.emotion)
                 rospy.loginfo(f"Emtion: {self.emotion}")
-                rospy.sleep(1)
+                rospy.sleep(2)
 
                 self.emotion_image = random.choice(self.images_sad)
                 rospy.loginfo(f"Show image: {self.emotion_image}")
@@ -164,7 +164,7 @@ class migrave_game_emotions:
 
                 self.emotion_pub.publish(self.emotion)
                 rospy.loginfo(f"Publish emotion: {self.emotion}")
-                rospy.sleep(1)
+                rospy.sleep(2)
 
                 self.tablet_image_pub.publish(self.images[0])
                 rospy.sleep(1)
@@ -306,6 +306,8 @@ class migrave_game_emotions:
                     self.migrave_audio_play("rfh-koeln/MIGRAVE/Reward2")
 
                     image = f"{self.correct}Token"
+                    rospy.loginfo(image)
+                    self.tablet_image_pub.publish(image)
                     rospy.loginfo(f"Publish image: {self.correct}Token")
                     rospy.sleep(6)
 
@@ -389,14 +391,14 @@ class migrave_game_emotions:
                 self.finish_one_task()
 
     def retry_after_wrong(self):
-        self.game_status_pub.publish("Running")
-        rospy.loginfo("Publish status: Running")
+        self.game_status_pub.publish("running")
+        rospy.loginfo("Publish status: running")
         rospy.sleep(2)
         # self.migrave_talk_text("Schau auf das Tablet!")
 
     def start_new_round_and_grade(self):
-        self.game_status_pub.publish("Running")
-        rospy.loginfo("Publish status: Running")
+        self.game_status_pub.publish("running")
+        rospy.loginfo("Publish status: running")
         rospy.sleep(2)
 
         # Show image
