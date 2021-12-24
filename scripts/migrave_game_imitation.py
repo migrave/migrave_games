@@ -106,9 +106,14 @@ class migrave_game_imitation:
             self.correct = 0
             self.task = self.game_status
             self.migrave_talk_text("Hände auf den Tisch, schau mich an.")
-            self.migrave_talk_text("Ich mach vor und du machst nach!")
+            self.migrave_talk_text(
+                "Ich mach vor und du schaust zu! Danach bist du dran!"
+            )
             self.migrave_talk_text(self.texts[self.task])
             self.migrave_gesture_play(self.gestures[self.task])
+            rospy.sleep(2)
+            self.migrave_gesture_play(self.gestures_restore[self.task])
+            self.migrave_talk_text("Du bist dran. Mach nach!")
             # Update game status
             self.game_status = "Running"
             self.game_status_pub.publish("Running")
@@ -159,7 +164,7 @@ class migrave_game_imitation:
         if self.count < 5:
             # Reaction after grading
 
-            self.migrave_gesture_play(self.gestures_restore[self.task])
+            # self.migrave_gesture_play(self.gestures_restore[self.task])
 
             emotion = feedback_emotions[result]
             self.migrave_show_emotion(emotion)
@@ -215,14 +220,16 @@ class migrave_game_imitation:
                 self.retry_after_wrong()
 
             if result == "right_after_wrong":
+                self.migrave_show_emotion("showing_smile")
+                self.migrave_talk_text("Noch ein mal!")
                 self.start_new_round_and_grade()
 
             if result == "wrong_again":
-                self.start_new_round_and_grade()
+                self.retry_after_wrong()
 
         else:  # self.count = 5, self.correct <=4 at the first iteration
             # rospy.sleep(2)
-            self.migrave_gesture_play(self.gestures_restore[self.task])
+            # self.migrave_gesture_play(self.gestures_restore[self.task])
             emotion = feedback_emotions[result]
             self.migrave_show_emotion(emotion)
             text = feedback_texts[result]
@@ -267,7 +274,10 @@ class migrave_game_imitation:
                     self.tablet_image_pub.publish(image)
                     rospy.loginfo(f"Publish image: {self.correct}Token")
                     rospy.sleep(6)
-                    if self.correct < 5:
+                    if self.correct == 4:
+                        rospy.loginfo("3 out of 5 -> 4 correct, finish")
+                        self.finish_one_task()
+                    if self.correct < 4:
                         self.migrave_talk_text("Noch ein mal!")
                         self.start_new_round_and_grade()
                 if result == "right_after_wrong":
@@ -282,9 +292,11 @@ class migrave_game_imitation:
                 self.finish_one_task()
 
     def retry_after_wrong(self):
-        self.migrave_talk_text("Mach nach!")
         self.migrave_talk_text(self.texts[self.task])
         self.migrave_gesture_play(self.gestures[self.task])
+        rospy.sleep(2)
+        self.migrave_gesture_play(self.gestures_restore[self.task])
+        self.migrave_talk_text("Du bist dran. Mach nach!")
         self.game_status_pub.publish("Running")
         rospy.loginfo("Publish status: Running")
         rospy.sleep(1)
@@ -293,9 +305,11 @@ class migrave_game_imitation:
         rospy.loginfo("Wait for grading")
 
     def start_new_round_and_grade(self):
-        self.migrave_talk_text("Mach nach!")
         self.migrave_talk_text(self.texts[self.task])
         self.migrave_gesture_play(self.gestures[self.task])
+        rospy.sleep(2)
+        self.migrave_gesture_play(self.gestures_restore[self.task])
+        self.migrave_talk_text("Du bist dran. Mach nach!")
         self.game_status_pub.publish("Running")
         rospy.loginfo("Publish status: Running")
         rospy.sleep(1)
@@ -318,9 +332,9 @@ class migrave_game_imitation:
         rospy.loginfo("Publish image: Fireworks")
         # rospy.sleep(2)
         self.migrave_audio_play("rfh-koeln/MIGRAVE/Fireworks")
-        rospy.sleep(6)
-        self.tablet_image_pub.publish("Nix")
-        rospy.loginfo("Publish image: Nix")
+        # rospy.sleep(6)
+        # self.tablet_image_pub.publish("Nix")
+        # rospy.loginfo("Publish image: Nix")
         self.count = 0
         self.correct = 0
 
