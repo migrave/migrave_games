@@ -10,6 +10,7 @@ project(migrave_games)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  roslint
   std_msgs
 )
 
