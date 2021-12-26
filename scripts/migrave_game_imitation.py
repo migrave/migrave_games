@@ -36,6 +36,9 @@ class migrave_game_imitation:
         self.game_status_pub = rospy.Publisher(
             "/migrave_game_imitation/status", String, queue_size=10
         )
+        self.task_status_pub = rospy.Publisher(
+            "/migrave_game_imitation/task_status", String, queue_size=10
+        )
         self.tablet_image_pub = rospy.Publisher(
             "/migrave_game_imitation/tablet_image", String, queue_size=10
         )
@@ -59,6 +62,7 @@ class migrave_game_imitation:
         self.count = 0
         self.correct = 0
         self.game_status = "Waiting"
+        self.task_status = "Waiting"
         self.result = "Waiting"
         self.task = "Waiting"
 
@@ -83,6 +87,11 @@ class migrave_game_imitation:
         self.game_status = msg.data
         self.game_start()
         self.task_start()
+        if self.game_status == "end":
+            rospy.loginfo("Game ends")
+            rospy.sleep(2)
+            rospy.loginfo("Publish image: Nix")
+            self.tablet_image_pub.publish("Nix")
 
     def game_start(self):
         if self.game_status == "start":
@@ -115,9 +124,9 @@ class migrave_game_imitation:
             self.migrave_gesture_play(self.gestures_restore[self.task])
             self.migrave_talk_text("Du bist dran. Mach nach!")
             # Update game status
-            self.game_status = "Running"
-            self.game_status_pub.publish("Running")
-            rospy.loginfo("Publish status: Running")
+            self.task_status = "Running"
+            self.task_status_pub.publish("Running")
+            rospy.loginfo("Publish task status: Running")
             rospy.sleep(1)
             # Show choices (right, Almost right, wrong) on Educator Tablet
             self.show_educator_choice_pub.publish(True)
@@ -274,10 +283,10 @@ class migrave_game_imitation:
                     self.tablet_image_pub.publish(image)
                     rospy.loginfo(f"Publish image: {self.correct}Token")
                     rospy.sleep(6)
-                    if self.correct == 4:
+                    if self.count == 5 and self.correct == 4:
                         rospy.loginfo("3 out of 5 -> 4 correct, finish")
                         self.finish_one_task()
-                    if self.correct < 4:
+                    if self.count == 5 and self.correct < 4:
                         self.migrave_talk_text("Noch ein mal!")
                         self.start_new_round_and_grade()
                 if result == "right_after_wrong":
@@ -297,8 +306,8 @@ class migrave_game_imitation:
         rospy.sleep(2)
         self.migrave_gesture_play(self.gestures_restore[self.task])
         self.migrave_talk_text("Du bist dran. Mach nach!")
-        self.game_status_pub.publish("Running")
-        rospy.loginfo("Publish status: Running")
+        self.task_status_pub.publish("Running")
+        rospy.loginfo("Publish task status: Running")
         rospy.sleep(1)
         self.show_educator_choice_pub.publish(True)
         rospy.loginfo("Publish choice")
@@ -310,8 +319,8 @@ class migrave_game_imitation:
         rospy.sleep(2)
         self.migrave_gesture_play(self.gestures_restore[self.task])
         self.migrave_talk_text("Du bist dran. Mach nach!")
-        self.game_status_pub.publish("Running")
-        rospy.loginfo("Publish status: Running")
+        self.task_status_pub.publish("Running")
+        rospy.loginfo("Publish task status: Running")
         rospy.sleep(1)
         self.show_educator_choice_pub.publish(True)
         rospy.loginfo("Publish choice")
@@ -323,14 +332,14 @@ class migrave_game_imitation:
         self.migrave_gesture_play("QT/Dance/Dance-1-1")
         self.migrave_show_emotion("showing_smile")
         self.migrave_gesture_play("QT/imitation/hands-up-back")
-        self.game_status_pub.publish("finish")
-        rospy.loginfo("Publish status: finish")
+        self.task_status_pub.publish("finish")
+        rospy.loginfo("Publish task status: finish")
         self.migrave_talk_text(
             "Schau mal auf das Tablet. Da ist ein Feuerwerk für dich!"
         )
         self.tablet_image_pub.publish("Fireworks")
         rospy.loginfo("Publish image: Fireworks")
-        # rospy.sleep(2)
+        rospy.sleep(1)
         self.migrave_audio_play("rfh-koeln/MIGRAVE/Fireworks")
         # rospy.sleep(6)
         # self.tablet_image_pub.publish("Nix")
