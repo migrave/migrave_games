@@ -10,7 +10,7 @@ from qt_robot_interface.srv import (
 from qt_gesture_controller.srv import gesture_play
 
 
-class migrave_game_imitation:
+class MigraveGameImitation:
     def __init__(self, game_status_topic, game_answer_topic):
         self.game_status_topic = game_status_topic
         self.game_answer_topic = game_answer_topic
@@ -390,12 +390,3 @@ class migrave_game_imitation:
             qt_audio_play(audio, "")
         except rospy.ServiceException as e:
             rospy.loginfo(f"Service call failed: {e}")
-
-
-if __name__ == "__main__":
-
-    game_status_topic = "/migrave_game_imitation/status"
-    game_answer_topic = "/migrave_game_imitation/answer"
-    game = migrave_game_imitation(game_status_topic, game_answer_topic)
-    rospy.init_node("migrave_game_imitation", anonymous=True)
-    rospy.spin()

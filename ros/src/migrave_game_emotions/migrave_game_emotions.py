@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
 from std_msgs.msg import String, Bool
@@ -11,7 +10,7 @@ from qt_gesture_controller.srv import gesture_play
 import random
 
 
-class migrave_game_emotions:
+class MigraveGameEmotions:
     def __init__(self, game_status_topic, game_answer_topic):
         self.game_status_topic = game_status_topic
         self.game_answer_topic = game_answer_topic
@@ -599,12 +598,3 @@ class migrave_game_emotions:
             qt_audio_play(audio, "")
         except rospy.ServiceException as e:
             rospy.loginfo(f"Service call failed: {e}")
-
-
-if __name__ == "__main__":
-
-    game_status_topic = "/migrave_game_emotions/status"
-    game_answer_topic = "/migrave_game_emotions/answer"
-    game = migrave_game_emotions(game_status_topic, game_answer_topic)
-    rospy.init_node("migrave_game_emotions", anonymous=True)
-    rospy.spin()

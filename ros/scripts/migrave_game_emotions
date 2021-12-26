@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import rospy
+
+from migrave_game_emotions.migrave_game_emotions import MigraveGameEmotions
+
+if __name__ == "__main__":
+
+    game_status_topic = "/migrave_game_emotions/status"
+    game_answer_topic = "/migrave_game_emotions/answer"
+    game = MigraveGameEmotions(game_status_topic, game_answer_topic)
+    rospy.init_node("migrave_game_emotions", anonymous=True)
+    rospy.spin()
