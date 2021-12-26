@@ -37,6 +37,9 @@ class migrave_game_emotions:
         self.game_status_pub = rospy.Publisher(
             "/migrave_game_emotions/status", String, queue_size=10
         )
+        self.task_status_pub = rospy.Publisher(
+            "/migrave_game_emotions/task_status", String, queue_size=10
+        )
         self.tablet_image_pub = rospy.Publisher(
             "/migrave_game_emotions/tablet_image", String, queue_size=10
         )
@@ -67,6 +70,7 @@ class migrave_game_emotions:
         self.count = 0
         self.correct = 0
         self.game_status = "Waiting"
+        self.task_status = "Waiting"
         self.result = "Waiting"
         self.task = "Waiting"
         self.emotion = "Waiting"
@@ -87,6 +91,11 @@ class migrave_game_emotions:
         self.game_status = msg.data
         self.game_start()
         self.task_start()
+        if self.game_status == "end":
+            rospy.loginfo("Game ends")
+            rospy.sleep(6)
+            rospy.loginfo("Publish image: Nix")
+            self.tablet_image_pub.publish("Nix")
 
     def game_answer_callback(self, msg):
         rospy.loginfo("game answer callback")
@@ -113,17 +122,22 @@ class migrave_game_emotions:
             rospy.loginfo("End of intro")
 
     def task_start(self):
+        rospy.loginfo(f"Debug: {self.game_status in self.tasks}")
+        rospy.loginfo(f"Current status: {self.game_status}")
+        rospy.loginfo(f"Current task: {self.task}")
         if self.game_status in self.tasks:
+            rospy.loginfo("Start new task")
             self.count = 0
             self.correct = 0
             self.migrave_talk_text("Schau auf das Tablet!")
             self.task = self.game_status
-            rospy.loginfo(f"Task: {self.task}")
+            rospy.loginfo(f"Updated task: {self.task}")
+            rospy.loginfo(f"Task_1: {self.task}")
 
             # Update game status
-            self.game_status = "running"
-            self.game_status_pub.publish("running")
-            rospy.loginfo("Publish status: running")
+            self.task_status = "running"
+            self.task_status_pub.publish("running")
+            rospy.loginfo("Publish task status: running")
             rospy.sleep(2)
 
             # Show image
@@ -376,7 +390,11 @@ class migrave_game_emotions:
                     self.tablet_image_pub.publish(image)
                     rospy.loginfo(f"Publish image: {self.correct}Token")
                     rospy.sleep(6)
-                    if self.correct < 5:
+                    if self.count == 5 and self.correct == 4:
+                        rospy.loginfo("3 out of 5 -> 4 correct, finish")
+                        self.finish_one_task()
+                    if self.count == 5 and self.correct < 4:
+                        rospy.loginfo("Less than 4, continue")
                         self.migrave_talk_text("Noch ein mal!")
                         self.start_new_round_and_grade()
                 if result in ["right_1", "right_2"]:
@@ -391,14 +409,14 @@ class migrave_game_emotions:
                 self.finish_one_task()
 
     def retry_after_wrong(self):
-        self.game_status_pub.publish("running")
-        rospy.loginfo("Publish status: running")
+        self.task_status_pub.publish("running")
+        rospy.loginfo("Publish task status: running")
         rospy.sleep(2)
         # self.migrave_talk_text("Schau auf das Tablet!")
 
     def start_new_round_and_grade(self):
-        self.game_status_pub.publish("running")
-        rospy.loginfo("Publish status: running")
+        self.task_status_pub.publish("running")
+        rospy.loginfo("Publish task status: running")
         rospy.sleep(2)
 
         # Show image
@@ -522,15 +540,15 @@ class migrave_game_emotions:
         self.migrave_gesture_play("QT/Dance/Dance-1-1")
         self.migrave_show_emotion("showing_smile")
         self.migrave_gesture_play("QT/imitation/hands-up-back")
-        self.game_status_pub.publish("finish")
-        rospy.loginfo("Publish status: finish")
+        self.task_status_pub.publish("finish")
+        rospy.loginfo("Publish task status: finish")
         # rospy.sleep(4)
         self.migrave_talk_text(
             "Schau mal auf das Tablet. Da ist ein Feuerwerk für dich!"
         )
         self.tablet_image_pub.publish("Fireworks")
         rospy.loginfo("Publish image: Fireworks")
-        # rospy.sleep(2)
+        rospy.sleep(2)
         self.migrave_audio_play("rfh-koeln/MIGRAVE/Fireworks")
         # rospy.sleep(10)
         # self.tablet_image_pub.publish("Nix")
