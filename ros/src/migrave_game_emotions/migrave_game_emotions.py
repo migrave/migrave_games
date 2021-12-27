@@ -79,172 +79,65 @@ class MigraveGameEmotions:
                       "sad_vs_happy", "happy_or_sad"]
         self.images_happy = ["Happy1", "Happy2"]
         self.images_sad = ["Sad1", "Sad2"]
-        # self.images_mixed = [
-        #     ["Happy1", "Sad1"],
-        #     ["Sad2", "Happy2"],
-        #     ["Happy2", "Sad1"],
-        #     ["Sad2", "Happy1"],
-        # ]
 
     def game_status_callback(self, msg):
         self.game_status = msg.data
-        self.game_start()
-        self.task_start()
-        if self.game_status == "end":
+        # start the game
+        if self.game_status == "start_emotions":
+            self.game_start()
+        # start the task
+        if self.game_status in self.tasks:
+            self.task_start()
+        # end the game
+        if self.game_status == "end_emotions":
             rospy.loginfo("Game ends")
             rospy.sleep(6)
             rospy.loginfo("Publish image: Nix")
             self.tablet_image_pub.publish("Nix")
 
     def game_answer_callback(self, msg):
-        rospy.loginfo("game answer callback")
         self.result = msg.data
         rospy.loginfo(f"Game result: {self.result}")
         self.game_grade()
 
     def game_start(self):
-        if self.game_status == "start":
-            self.count = 0
-            self.correct = 0
-            # Introduction
-            rospy.loginfo("Game starts!")
-            rospy.loginfo("Start intro")
-            self.migrave_talk_text("Jetzt üben wir Gefühle erkennen.")
-            self.migrave_talk_text("Los geht's!")
-            self.migrave_show_emotion("showing_smile")
-            self.migrave_talk_text(
-                "Hände auf den Tisch, schau mich an. Los geht's!")
-            self.migrave_show_emotion("showing_smile")
-            self.migrave_talk_text(
-                "Ich nenne dir ein Gefühl. Du tippst auf das passende Bild."
-            )
-            rospy.loginfo("End of intro")
+        self.count = 0
+        self.correct = 0
+        # Introduction
+        rospy.loginfo("Emotion game starts!")
+        rospy.loginfo("Start intro")
+        self.migrave_talk_text("Jetzt üben wir Gefühle erkennen.")
+        self.migrave_talk_text("Los geht's!")
+        self.migrave_show_emotion("showing_smile")
+        self.migrave_talk_text(
+            "Hände auf den Tisch, schau mich an. Los geht's!")
+        self.migrave_show_emotion("showing_smile")
+        self.migrave_talk_text(
+            "Ich nenne dir ein Gefühl. Du tippst auf das passende Bild."
+        )
+        rospy.loginfo("End of intro")
 
     def task_start(self):
-        rospy.loginfo(f"Debug: {self.game_status in self.tasks}")
-        rospy.loginfo(f"Current status: {self.game_status}")
-        rospy.loginfo(f"Current task: {self.task}")
-        if self.game_status in self.tasks:
-            rospy.loginfo("Start new task")
-            self.count = 0
-            self.correct = 0
-            self.migrave_talk_text("Schau auf das Tablet!")
-            self.task = self.game_status
-            rospy.loginfo(f"Updated task: {self.task}")
-            rospy.loginfo(f"Task_1: {self.task}")
+        rospy.loginfo("Start new task")
+        self.count = 0
+        self.correct = 0
+        self.task = self.game_status
+        rospy.loginfo(f"Task: {self.task}")
 
-            # Update game status
-            self.task_status = "running"
-            self.task_status_pub.publish("running")
-            rospy.loginfo("Publish task status: running")
-            rospy.sleep(2)
+        # Update game status
+        rospy.sleep(2)
+        self.task_status = "running"
+        self.task_status_pub.publish("running")
+        rospy.loginfo("Publish task status: running")
+        rospy.sleep(2)
 
-            # Show image
-            if self.task == "happy":
-                self.emotion = "glückliche"
-                self.emotion_pub.publish(self.emotion)
-                rospy.loginfo(f"Publish emotion: {self.emotion}")
-                rospy.sleep(2)
-
-                self.emotion_image = random.choice(self.images_happy)
-                rospy.loginfo(f"Show image: {self.emotion_image}")
-                self.tablet_image_pub.publish(self.emotion_image)
-                rospy.sleep(2)
-
-            if self.task == "sad":
-                self.emotion = "traurige"
-                self.emotion_pub.publish(self.emotion)
-                rospy.loginfo(f"Emtion: {self.emotion}")
-                rospy.sleep(2)
-
-                self.emotion_image = random.choice(self.images_sad)
-                rospy.loginfo(f"Show image: {self.emotion_image}")
-                self.tablet_image_pub.publish(self.emotion_image)
-                rospy.sleep(2)
-
-            if self.task == "happy_vs_sad":
-                self.image_happy = random.choice(self.images_happy)
-                self.image_x = f"{self.image_happy}X"
-                self.image_sad = random.choice(self.images_sad)
-                self.images = [self.image_happy, self.image_sad]
-                random.shuffle(self.images)
-                self.correct_image = 2
-                if "Happy" in self.images[0]:
-                    self.correct_image = 1
-                self.emotion = "glückliche"
-                rospy.loginfo(self.images)
-                rospy.loginfo(self.correct_image)
-
-                self.emotion_pub.publish(self.emotion)
-                rospy.loginfo(f"Publish emotion: {self.emotion}")
-                rospy.sleep(2)
-
-                self.tablet_image_pub.publish(self.images[0])
-                rospy.sleep(1)
-                self.tablet_image_pub.publish(self.images[1])
-                rospy.sleep(1)
-                self.tablet_image_pub.publish(self.image_x)
-                rospy.sleep(1)
-                self.correct_image_pub.publish(str(self.correct_image))
-                rospy.sleep(1)
-
-            if self.task == "sad_vs_happy":
-                self.image_happy = random.choice(self.images_happy)
-                self.image_sad = random.choice(self.images_sad)
-                self.image_x = f"{self.image_sad}X"
-                self.images = [self.image_happy, self.image_sad]
-                random.shuffle(self.images)
-                self.correct_image = 2
-                if "Sad" in self.images[0]:
-                    self.correct_image = 1
-                self.emotion = "traurige"
-                rospy.loginfo(self.images)
-                rospy.loginfo(self.correct_image)
-
-                self.emotion_pub.publish(self.emotion)
-                rospy.sleep(1)
-
-                self.tablet_image_pub.publish(self.images[0])
-                rospy.sleep(1)
-                self.tablet_image_pub.publish(self.images[1])
-                rospy.sleep(1)
-                self.tablet_image_pub.publish(self.image_x)
-                rospy.sleep(1)
-                self.correct_image_pub.publish(str(self.correct_image))
-                rospy.sleep(1)
-
-            if self.task == "happy_or_sad":
-                self.image_happy = random.choice(self.images_happy)
-                self.image_sad = random.choice(self.images_sad)
-                self.emotion = random.choice["glückliche", "traurige"]
-                if self.emotion == "glückliche":
-                    self.image_x = f"{self.image_happy}X"
-                    self.images = [self.image_happy, self.image_sad]
-                    random.shuffle(self.images)
-                    self.correct_image = 2
-                    if "Happy" in self.images[0]:
-                        self.correct_image = 1
-                if self.emotion == "traurige":
-                    self.image_x = f"{self.image_sad}X"
-                    self.images = [self.image_happy, self.image_sad]
-                    random.shuffle(self.images)
-                    self.correct_image = 2
-                    if "Sad" in self.images[0]:
-                        self.correct_image = 1
-
-                rospy.loginfo(self.emotion)
-                rospy.loginfo(self.images)
-                rospy.loginfo(self.correct_image)
-                self.tablet_image_pub.publish(self.images[0])
-                rospy.sleep(1)
-                self.tablet_image_pub.publish(self.images[1])
-                rospy.sleep(1)
-                self.tablet_image_pub.publish(self.image_x)
-                rospy.sleep(1)
-                self.emotion_pub.publish(self.emotion)
-                rospy.sleep(1)
-                self.correct_image_pub.publish(str(self.correct_image))
-                rospy.sleep(1)
+        # Show image
+        if self.task in ["happy", "sad"]:
+            rospy.loginfo("Simple task")
+            self.start_new_round_simple()
+        if self.task in ["happy_vs_sad", "sad_vs_happy", "happy_or_sad"]:
+            rospy.loginfo("Normal task")
+            self.start_new_round_simple()
 
     def game_grade(self):
         result = self.result
@@ -418,87 +311,59 @@ class MigraveGameEmotions:
         rospy.loginfo("Publish task status: running")
         rospy.sleep(2)
 
-        # Show image
+        if self.task in ["happy", "sad"]:
+            self.start_new_round_simple()
+
+        if self.task in ["happy_vs_sad", "sad_vs_happy", "happy_or_sad"]:
+            self.start_new_round()
+
+    def start_new_round_simple(self):
+
         if self.task == "happy":
-            self.emotion_pub.publish(self.emotion)
-            rospy.loginfo(f"Emtion: {self.emotion}")
-            # rospy.sleep(1)
-
-            self.migrave_talk_text("Schau auf das Tablet!")
-            rospy.sleep(1)
-
+            self.emotion = "glückliche"
             self.emotion_image = random.choice(self.images_happy)
-            rospy.loginfo(f"Show image: {self.emotion_image}")
-            self.tablet_image_pub.publish(self.emotion_image)
-            rospy.sleep(2)
         if self.task == "sad":
-            self.emotion_pub.publish(self.emotion)
-            rospy.loginfo(f"Emtion: {self.emotion}")
-            # rospy.sleep(1)
-
-            self.migrave_talk_text("Schau auf das Tablet!")
-            rospy.sleep(1)
-
+            self.emotion = "traurige"
             self.emotion_image = random.choice(self.images_sad)
-            rospy.loginfo(f"Show image: {self.emotion_image}")
-            self.tablet_image_pub.publish(self.emotion_image)
-            rospy.sleep(2)
 
+        self.emotion_pub.publish(self.emotion)
+        rospy.loginfo(f"Publish emotion: {self.emotion}")
+        rospy.sleep(2)
+
+        rospy.loginfo(f"Show image: {self.emotion_image}")
+        self.migrave_talk_text("Schau auf das Tablet!")
+        # rospy.sleep(2)
+        self.tablet_image_pub.publish(self.emotion_image)
+        rospy.sleep(2)
+
+    def start_new_round(self):
+        self.image_happy = random.choice(self.images_happy)
+        self.image_sad = random.choice(self.images_sad)
+
+        # choose the hightligthed correct image (e.g. Happy1X)
         if self.task == "happy_vs_sad":
-            self.image_happy = random.choice(self.images_happy)
             self.image_x = f"{self.image_happy}X"
-            self.image_sad = random.choice(self.images_sad)
-            self.images = [self.image_happy, self.image_sad]
-            random.shuffle(self.images)
-            self.correct_image = 2
+        if self.task == "sad_vs_happy":
+            self.image_x = f"{self.image_sad}X"
+
+        self.images = [self.image_happy, self.image_sad]
+        random.shuffle(self.images)
+
+        # find the order of the correct image
+        # and set the German word for happy or sad
+        self.correct_image = 2
+        if self.task == "happy_vs_sad":
             if "Happy" in self.images[0]:
                 self.correct_image = 1
             self.emotion = "glückliche"
-            rospy.loginfo(self.images)
-            rospy.loginfo(self.correct_image)
-            self.emotion_pub.publish(self.emotion)
-            # rospy.sleep(1)
-            self.migrave_talk_text("Schau auf das Tablet!")
-            rospy.sleep(1)
-
-            self.tablet_image_pub.publish(self.images[0])
-            rospy.sleep(1)
-            self.tablet_image_pub.publish(self.images[1])
-            rospy.sleep(1)
-            self.tablet_image_pub.publish(self.image_x)
-            rospy.sleep(1)
-            self.correct_image_pub.publish(str(self.correct_image))
-            rospy.sleep(1)
 
         if self.task == "sad_vs_happy":
-            self.image_happy = random.choice(self.images_happy)
-            self.image_sad = random.choice(self.images_sad)
-            self.image_x = f"{self.image_sad}X"
-            self.images = [self.image_happy, self.image_sad]
-            random.shuffle(self.images)
-            self.correct_image = 2
             if "Sad" in self.images[0]:
                 self.correct_image = 1
             self.emotion = "traurige"
-            rospy.loginfo(self.images)
-            rospy.loginfo(self.correct_image)
-            self.emotion_pub.publish(self.emotion)
-            # rospy.sleep(1)
-            self.migrave_talk_text("Schau auf das Tablet!")
-            rospy.sleep(1)
 
-            self.tablet_image_pub.publish(self.images[0])
-            rospy.sleep(1)
-            self.tablet_image_pub.publish(self.images[1])
-            rospy.sleep(1)
-            self.tablet_image_pub.publish(self.image_x)
-            rospy.sleep(1)
-            self.correct_image_pub.publish(str(self.correct_image))
-            rospy.sleep(1)
-
+        # Not used currently due to time constraint
         if self.task == "happy_or_sad":
-            self.image_happy = random.choice(self.images_happy)
-            self.image_sad = random.choice(self.images_sad)
             self.emotion = random.choice["glückliche", "traurige"]
             if self.emotion == "glückliche":
                 self.image_x = f"{self.image_happy}X"
@@ -515,23 +380,23 @@ class MigraveGameEmotions:
                 if "Sad" in self.images[0]:
                     self.correct_image = 1
 
-            rospy.loginfo(self.emotion)
-            rospy.loginfo(self.images)
-            rospy.loginfo(self.correct_image)
+        rospy.loginfo(f"Images: {self.images}")
+        rospy.loginfo(f"Order of the correct image: {self.correct_image}")
+        rospy.loginfo(f"Correct emotion: {self.emotion}")
 
-            self.emotion_pub.publish(self.emotion)
+        self.emotion_pub.publish(self.emotion)
+        # rospy.sleep(1)
+        self.migrave_talk_text("Schau auf das Tablet!")
+        rospy.sleep(1)
 
-            self.migrave_talk_text("Schau auf das Tablet!")
-            rospy.sleep(1)
-
-            self.tablet_image_pub.publish(self.images[0])
-            rospy.sleep(1)
-            self.tablet_image_pub.publish(self.images[1])
-            rospy.sleep(1)
-            self.tablet_image_pub.publish(self.image_x)
-            rospy.sleep(1)
-            self.correct_image_pub.publish(str(self.correct_image))
-            rospy.sleep(1)
+        self.tablet_image_pub.publish(self.images[0])
+        rospy.sleep(1)
+        self.tablet_image_pub.publish(self.images[1])
+        rospy.sleep(1)
+        self.tablet_image_pub.publish(self.image_x)
+        rospy.sleep(1)
+        self.correct_image_pub.publish(str(self.correct_image))
+        rospy.sleep(1)
 
     def finish_one_task(self):
         self.migrave_show_emotion("showing_smile")

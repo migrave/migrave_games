@@ -47,11 +47,11 @@ class MigraveGameImitation:
         )
 
         # Game related topic subscribers
-        self.game_status_subscriber = rospy.Subscriber(
+        self.game_status_sub = rospy.Subscriber(
             self.game_status_topic, String, self.game_status_callback
         )
 
-        self.game_answer_subscriber = rospy.Subscriber(
+        self.game_answer_sub = rospy.Subscriber(
             self.game_answer_topic, String, self.game_answer_callback
         )
 
@@ -61,10 +61,10 @@ class MigraveGameImitation:
         # game parameters
         self.count = 0
         self.correct = 0
-        self.game_status = "Waiting"
-        self.task_status = "Waiting"
-        self.result = "Waiting"
-        self.task = "Waiting"
+        self.game_status = "waiting"
+        self.task_status = "waiting"
+        self.result = "waiting"
+        self.task = "waiting"
 
         self.tasks = ["hands-up", "hands-side", "Fly"]
         self.texts = {
@@ -85,55 +85,57 @@ class MigraveGameImitation:
 
     def game_status_callback(self, msg):
         self.game_status = msg.data
-        self.game_start()
-        self.task_start()
-        if self.game_status == "end":
+        # start the game
+        if self.game_status == "start_imitation":
+            self.game_start()
+
+        # start the task
+        if self.game_status in self.tasks:
+            self.task_start()
+
+        # end the game
+        if self.game_status == "end_imitation":
             rospy.loginfo("Game ends")
             rospy.sleep(2)
             rospy.loginfo("Publish image: Nix")
             self.tablet_image_pub.publish("Nix")
 
     def game_start(self):
-        if self.game_status == "start":
-            self.count = 0
-            self.correct = 0
-            # Introduction
-            rospy.loginfo("Game starts!")
-            rospy.loginfo("Start intro")
-            self.migrave_talk_text("Jetzt üben wir Bewegungen nachmachen.")
-            self.migrave_talk_text(
-                "Das Lerner-Tablet bekommt dehr, oder die, Erwachsene"
-            )
-            self.migrave_show_emotion("showing_smile")
-            self.migrave_talk_text("Los geht's!")
-            self.migrave_show_emotion("showing_smile")
-            rospy.loginfo("End of intro")
+        self.count = 0
+        self.correct = 0
+        # Introduction
+        rospy.loginfo("Game starts!")
+        rospy.loginfo("Start intro")
+        self.migrave_talk_text("Jetzt üben wir Bewegungen nachmachen.")
+        self.migrave_talk_text(
+            "Das Lerner-Tablet bekommt dehr, oder die, Erwachsene")
+        self.migrave_show_emotion("showing_smile")
+        self.migrave_talk_text("Los geht's!")
+        self.migrave_show_emotion("showing_smile")
+        rospy.loginfo("End of intro")
 
     def task_start(self):
-        if self.game_status in self.tasks:
-            self.count = 0
-            self.correct = 0
-            self.task = self.game_status
-            self.migrave_talk_text("Hände auf den Tisch, schau mich an.")
-            self.migrave_talk_text(
-                "Ich mach vor und du schaust zu! Danach bist du dran!"
-            )
-            self.migrave_talk_text(self.texts[self.task])
-            self.migrave_gesture_play(self.gestures[self.task])
-            rospy.sleep(2)
-            self.migrave_gesture_play(self.gestures_restore[self.task])
-            self.migrave_talk_text("Du bist dran. Mach nach!")
-            # Update game status
-            self.task_status = "Running"
-            self.task_status_pub.publish("Running")
-            rospy.loginfo("Publish task status: Running")
-            rospy.sleep(1)
-            # Show choices (right, Almost right, wrong) on Educator Tablet
-            self.show_educator_choice_pub.publish(True)
-            rospy.loginfo("Publish choice")
+        self.count = 0
+        self.correct = 0
+        self.task = self.game_status
+        self.migrave_talk_text("Hände auf den Tisch, schau mich an.")
+        self.migrave_talk_text(
+            "Ich mach vor und du schaust zu! Danach bist du dran!")
+        self.migrave_talk_text(self.texts[self.task])
+        self.migrave_gesture_play(self.gestures[self.task])
+        rospy.sleep(2)
+        self.migrave_gesture_play(self.gestures_restore[self.task])
+        self.migrave_talk_text("Du bist dran. Mach nach!")
+        # Update game status
+        self.task_status = "Running"
+        self.task_status_pub.publish("Running")
+        rospy.loginfo("Publish task status: Running")
+        rospy.sleep(1)
+        # Show choices (right, Almost right, wrong) on Educator Tablet
+        self.show_educator_choice_pub.publish(True)
+        rospy.loginfo("Publish choice")
 
     def game_answer_callback(self, msg):
-        rospy.loginfo("game answer callback")
         self.result = msg.data
         rospy.loginfo(f"Game result: {self.result}")
         self.game_grade()
