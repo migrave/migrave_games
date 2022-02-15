@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
 from std_msgs.msg import String, Bool
@@ -75,8 +76,18 @@ class MigraveGameEmotions:
         self.emotion = "Waiting"
         self.emotion_image = "Nix"
 
-        self.tasks = ["happy", "sad", "happy_vs_sad",
-                      "sad_vs_happy", "happy_or_sad"]
+        self.tasks = [
+            "happy",
+            "sad",
+            "happy_vs_sad",
+            "sad_vs_happy",
+            "happy_or_sad",
+            "happy_resume",
+            "sad_resume",
+            "happy_vs_sad_resume",
+            "sad_vs_happy_resume",
+            "happy_or_sad_resume",
+        ]
         self.images_happy = ["Happy1", "Happy2"]
         self.images_sad = ["Sad1", "Sad2"]
 
@@ -91,9 +102,9 @@ class MigraveGameEmotions:
         # end the game
         if self.game_status == "end_emotions":
             rospy.loginfo("Game ends")
-            rospy.sleep(6)
-            rospy.loginfo("Publish image: Nix")
-            self.tablet_image_pub.publish("Nix")
+            # rospy.sleep(6)
+            # rospy.loginfo("Publish image: Nix")
+            # self.tablet_image_pub.publish("Nix")
 
     def game_answer_callback(self, msg):
         self.result = msg.data
@@ -119,8 +130,9 @@ class MigraveGameEmotions:
 
     def task_start(self):
         rospy.loginfo("Start new task")
-        self.count = 0
-        self.correct = 0
+        if "resume" not in self.game_status:
+            self.count = 0
+            self.correct = 0
         self.task = self.game_status
         rospy.loginfo(f"Task: {self.task}")
 
@@ -132,12 +144,19 @@ class MigraveGameEmotions:
         rospy.sleep(2)
 
         # Show image
-        if self.task in ["happy", "sad"]:
+        if self.task in ["happy", "sad", "happy_resume", "sad_resume"]:
             rospy.loginfo("Simple task")
             self.start_new_round_simple()
-        if self.task in ["happy_vs_sad", "sad_vs_happy", "happy_or_sad"]:
+        if self.task in [
+            "happy_vs_sad",
+            "sad_vs_happy",
+            "happy_or_sad",
+            "happy_vs_sad_resume",
+            "sad_vs_happy_resume",
+            "happy_or_sad_resume",
+        ]:
             rospy.loginfo("Normal task")
-            self.start_new_round_simple()
+            self.start_new_round()
 
     def game_grade(self):
         result = self.result
@@ -156,6 +175,11 @@ class MigraveGameEmotions:
             "happy_vs_sad": "Richtig, die Person zeigt ein glückliches Gesicht. Wunderbar!",
             "sad_vs_happy": "Richtig, die Person zeigt ein trauriges Gesicht. Wunderbar!",
             "sad_or_happy": f"Richtig, die Person zeigt ein {self.emotion}s Gesicht. Wunderbar!",
+            "happy_resume": "Richtig, die Person zeigt ein glückliches Gesicht. Wunderbar!",
+            "sad_resume": "Richtig, die Person zeigt ein trauriges Gesicht. Wunderbar!",
+            "happy_vs_sad_resume": "Richtig, die Person zeigt ein glückliches Gesicht. Wunderbar!",
+            "sad_vs_happy_resume": "Richtig, die Person zeigt ein trauriges Gesicht. Wunderbar!",
+            "sad_or_happy_resume": f"Richtig, die Person zeigt ein {self.emotion}s Gesicht. Wunderbar!",
         }
         feedback_texts = {
             "right": right_texts[self.task],
@@ -311,18 +335,25 @@ class MigraveGameEmotions:
         rospy.loginfo("Publish task status: running")
         rospy.sleep(2)
 
-        if self.task in ["happy", "sad"]:
+        if self.task in ["happy", "sad", "happy_resume", "sad_resume"]:
             self.start_new_round_simple()
 
-        if self.task in ["happy_vs_sad", "sad_vs_happy", "happy_or_sad"]:
+        if self.task in [
+            "happy_vs_sad",
+            "sad_vs_happy",
+            "happy_or_sad",
+            "happy_vs_sad_resume",
+            "sad_vs_happy_resume",
+            "happy_or_sad_resume",
+        ]:
             self.start_new_round()
 
     def start_new_round_simple(self):
 
-        if self.task == "happy":
+        if self.task in ["happy", "happy_resume"]:
             self.emotion = "glückliche"
             self.emotion_image = random.choice(self.images_happy)
-        if self.task == "sad":
+        if self.task in ["sad", "sad_resume"]:
             self.emotion = "traurige"
             self.emotion_image = random.choice(self.images_sad)
 
@@ -341,9 +372,9 @@ class MigraveGameEmotions:
         self.image_sad = random.choice(self.images_sad)
 
         # choose the hightligthed correct image (e.g. Happy1X)
-        if self.task == "happy_vs_sad":
+        if self.task in ["happy_vs_sad", "happy_vs_sad_resume"]:
             self.image_x = f"{self.image_happy}X"
-        if self.task == "sad_vs_happy":
+        if self.task in ["sad_vs_happy", "sad_vs_happy_resume"]:
             self.image_x = f"{self.image_sad}X"
 
         self.images = [self.image_happy, self.image_sad]
@@ -352,18 +383,18 @@ class MigraveGameEmotions:
         # find the order of the correct image
         # and set the German word for happy or sad
         self.correct_image = 2
-        if self.task == "happy_vs_sad":
+        if self.task in ["happy_vs_sad", "happy_vs_sad_resume"]:
             if "Happy" in self.images[0]:
                 self.correct_image = 1
             self.emotion = "glückliche"
 
-        if self.task == "sad_vs_happy":
+        if self.task in ["sad_vs_happy", "sad_vs_happy_resume"]:
             if "Sad" in self.images[0]:
                 self.correct_image = 1
             self.emotion = "traurige"
 
         # Not used currently due to time constraint
-        if self.task == "happy_or_sad":
+        if self.task in ["happy_or_sad", "happy_or_sad_resume"]:
             self.emotion = random.choice["glückliche", "traurige"]
             if self.emotion == "glückliche":
                 self.image_x = f"{self.image_happy}X"
