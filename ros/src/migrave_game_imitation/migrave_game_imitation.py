@@ -66,21 +66,37 @@ class MigraveGameImitation:
         self.result = "waiting"
         self.task = "waiting"
 
-        self.tasks = ["hands-up", "hands-side", "Fly"]
+        self.tasks = [
+            "hands-up",
+            "hands-side",
+            "Fly",
+            "hands-up-resume",
+            "hands-side-resume",
+            "Fly-resume",
+        ]
         self.texts = {
             "hands-up": "Beide Arme nach oben!",
             "hands-side": "Beide Arme zur Seite strecken!",
             "Fly": "Arme seitlich rauf und runter!",
+            "hands-up-resume": "Beide Arme nach oben!",
+            "hands-side-resume": "Beide Arme zur Seite strecken!",
+            "Fly-resume": "Arme seitlich rauf und runter!",
         }
         self.gestures = {
             "hands-up": "QT/imitation/hands-up",
             "hands-side": "QT/imitation/hands-side",
             "Fly": "QT/Pretend-play/Fly",
+            "hands-up-resume": "QT/imitation/hands-up",
+            "hands-side-resume": "QT/imitation/hands-side",
+            "Fly-resume": "QT/Pretend-play/Fly",
         }
         self.gestures_restore = {
             "hands-up": "QT/imitation/hands-up-back",
             "hands-side": "QT/imitation/hands-side-back",
             "Fly": "",
+            "hands-up-resume": "QT/imitation/hands-up-back",
+            "hands-side-resume": "QT/imitation/hands-side-back",
+            "Fly-resume": "",
         }
 
     def game_status_callback(self, msg):
@@ -115,8 +131,9 @@ class MigraveGameImitation:
         rospy.loginfo("End of intro")
 
     def task_start(self):
-        self.count = 0
-        self.correct = 0
+        if "resume" not in self.game_status:  # reset counters if not resume
+            self.count = 0
+            self.correct = 0
         self.task = self.game_status
         self.migrave_talk_text("Hände auf den Tisch, schau mich an.")
         self.migrave_talk_text(
@@ -152,11 +169,17 @@ class MigraveGameImitation:
             "hands-up": "Rigchtig, Arme hoch! Wunderbar!",
             "hands-side": "Richtig, Arme zur Seite! Wunderbar!",
             "Fly": "Richtig, Arme seitlich rauf und runter! Wunderbar!",
+            "hands-up-resume": "Rigchtig, Arme hoch! Wunderbar!",
+            "hands-side-resume": "Richtig, Arme zur Seite! Wunderbar!",
+            "Fly-resume": "Richtig, Arme seitlich rauf und runter! Wunderbar!",
         }
         right_after_wrong_texts = {
             "hands-up": "Rigchtig, Arme hoch! Wunderbar!",
             "hands-side": "Richtig, Arme zur Seite! Wunderbar!",
             "Fly": "Richtig, Arme seitlich rauf und runter! Wunderbar!",
+            "hands-up-resume": "Rigchtig, Arme hoch! Wunderbar!",
+            "hands-side-resume": "Richtig, Arme zur Seite! Wunderbar!",
+            "Fly-resume": "Richtig, Arme seitlich rauf und runter! Wunderbar!",
         }
         feedback_texts = {
             "right": right_texts[self.task],
