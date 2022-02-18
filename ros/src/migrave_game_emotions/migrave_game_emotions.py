@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import rospy
 from std_msgs.msg import String, Bool
+from migrave_ros_msgs.msg import GamePerformance
 from qt_robot_interface.srv import (
     behavior_talk_text,
     emotion_show,
@@ -63,6 +64,14 @@ class MigraveGameEmotions:
             self.game_answer_topic, String, self.game_answer_callback
         )
 
+        self.game_performance_topic = rospy.get_param(
+            "~performance_topic", "/migrave/game_performance"
+        )
+
+        self.game_performance_pub = rospy.Publisher(
+            self.game_performance_topic, GamePerformance, queue_size=1
+        )
+
         # Initialization
         # robot setting
         self.gesture_speed = 1.0
@@ -91,6 +100,44 @@ class MigraveGameEmotions:
         self.images_happy = ["Happy1", "Happy2"]
         self.images_sad = ["Sad1", "Sad2"]
 
+        # Game performance
+        self.game_performance = GamePerformance()
+        self.game_id = "emotion"
+        self.game_activity_ids = {
+            "happy": "happy",
+            "sad": "sad",
+            "happy_vs_sad": "happy_vs_sad",
+            "sad_vs_happy": "sad_vs_happy",
+            "happy_or_sad": "happy_or_sad",
+            "happy_resume": "happy",
+            "sad_resume": "sad",
+            "happy_vs_sad_resume": "happy_vs_sad",
+            "sad_vs_happy_resume": "sad_vs_happy",
+            "happy_or_sad_resume": "happy_or_sad",
+        }
+
+        self.difficulty_levels = {
+            "happy": 1,
+            "sad": 1,
+            "happy_vs_sad": 2,
+            "sad_vs_happy": 2,
+            "happy_or_sad": 3,
+            "happy_resume": 1,
+            "sad_resume": 1,
+            "happy_vs_sad_resume": 2,
+            "sad_vs_happy_resume": 2,
+            "happy_or_sad_resume": 3,
+        }
+
+        self.answer_correctnesses = {
+            "right": 1,
+            "right_1": 1,
+            "right_2": 1,
+            "wrong": 0,
+            "wrong_1": 0,
+            "wrong_2": 0,
+        }
+
     def game_status_callback(self, msg):
         self.game_status = msg.data
         # start the game
@@ -105,6 +152,12 @@ class MigraveGameEmotions:
             # rospy.sleep(6)
             # rospy.loginfo("Publish image: Nix")
             # self.tablet_image_pub.publish("Nix")
+            # publish game performance
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = "game_end"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
 
     def game_answer_callback(self, msg):
         self.result = msg.data
@@ -112,6 +165,13 @@ class MigraveGameEmotions:
         self.game_grade()
 
     def game_start(self):
+        # publish game performance
+        self.game_performance.answer_correctness = -1
+        self.game_performance.game_activity.game_id = self.game_id
+        self.game_performance.game_activity.game_activity_id = "game_init"
+        self.game_performance.stamp = rospy.Time.now()
+        self.game_performance_pub.publish(self.game_performance)
+        # reset counters
         self.count = 0
         self.correct = 0
         # Introduction
@@ -130,9 +190,19 @@ class MigraveGameEmotions:
 
     def task_start(self):
         rospy.loginfo("Start new task")
+        # Reset the counters when starting a new task
+        # Keep the counters' values for a resumed task
         if "resume" not in self.game_status:
             self.count = 0
             self.correct = 0
+        # Publish the game performance when resuming
+        if "resume" in self.game_status:
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = self.game_status
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
         self.task = self.game_status
         rospy.loginfo(f"Task: {self.task}")
 
@@ -197,6 +267,18 @@ class MigraveGameEmotions:
             "wrong_1": "",
             "wrong_2": "",
         }
+
+        self.game_performance.stamp = rospy.Time.now()
+        self.game_performance.game_activity.game_id = self.game_id
+        self.game_performance.game_activity.game_activity_id = self.game_activity_ids[
+            self.task
+        ]
+        self.game_performance.game_activity.difficulty_level = self.difficulty_levels[
+            self.task
+        ]
+        self.game_performance.answer_correctness = self.answer_correctnesses[result]
+        self.game_performance_pub.publish(self.game_performance)
+        rospy.loginfo("Publish game performance")
 
         if self.count < 5:
             # Reaction after grading

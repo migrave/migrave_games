@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import rospy
 from std_msgs.msg import String, Bool
+from migrave_ros_msgs.msg import GamePerformance
 from qt_robot_interface.srv import (
     behavior_talk_text,
     emotion_show,
@@ -55,6 +56,14 @@ class MigraveGameImitation:
             self.game_answer_topic, String, self.game_answer_callback
         )
 
+        self.game_performance_topic = rospy.get_param(
+            "~performance_topic", "/migrave/game_performance"
+        )
+
+        self.game_performance_pub = rospy.Publisher(
+            self.game_performance_topic, GamePerformance, queue_size=1
+        )
+
         # Initialization
         # robot setting
         self.gesture_speed = 1.0
@@ -99,6 +108,34 @@ class MigraveGameImitation:
             "Fly-resume": "",
         }
 
+        # Game performance
+        self.game_performance = GamePerformance()
+        self.game_id = "imitation"
+        self.game_activity_ids = {
+            "hands-up": "hands-up",
+            "hands-side": "hands-side",
+            "Fly": "Fly",
+            "hands-up-resume": "hands-up",
+            "hands-side-resume": "hands-side",
+            "Fly-resume": "Fly",
+        }
+
+        self.difficulty_levels = {
+            "hands-up": 1,
+            "hands-side": 1,
+            "Fly": 1,
+            "hands-up-resume": 1,
+            "hands-side-resume": 1,
+            "Fly-resume": 1,
+        }
+
+        self.answer_correctnesses = {
+            "right": 1,
+            "right_after_wrong": 1,
+            "wrong": 0,
+            "wrong_again": 0,
+        }
+
     def game_status_callback(self, msg):
         self.game_status = msg.data
         # start the game
@@ -111,12 +148,26 @@ class MigraveGameImitation:
 
         # end the game
         if self.game_status == "end_imitation":
+            # Publish game performance when ending
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = "game_end"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+            # Clear the picture on the tablet
             rospy.loginfo("Game ends")
             rospy.sleep(2)
             rospy.loginfo("Publish image: Nix")
             self.tablet_image_pub.publish("Nix")
 
     def game_start(self):
+        # publish game performance
+        self.game_performance.answer_correctness = -1
+        self.game_performance.game_activity.game_id = self.game_id
+        self.game_performance.game_activity.game_activity_id = "game_init"
+        self.game_performance.stamp = rospy.Time.now()
+        self.game_performance_pub.publish(self.game_performance)
+        # reset counters
         self.count = 0
         self.correct = 0
         # Introduction
@@ -131,9 +182,19 @@ class MigraveGameImitation:
         rospy.loginfo("End of intro")
 
     def task_start(self):
-        if "resume" not in self.game_status:  # reset counters if not resume
+        # Reset the counters when starting a new task
+        # Keep the counters' values for a resumed task
+        if "resume" not in self.game_status:
             self.count = 0
             self.correct = 0
+        # Publish the game performance when resuming
+        if "resume" in self.game_status:
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = self.game_status
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
         self.task = self.game_status
         self.migrave_talk_text("Hände auf den Tisch, schau mich an.")
         self.migrave_talk_text(
@@ -194,6 +255,19 @@ class MigraveGameImitation:
             "wrong_again": "",
         }
         result = self.result
+
+        # Publish game performance when getting the result
+        self.game_performance.stamp = rospy.Time.now()
+        self.game_performance.game_activity.game_id = self.game_id
+        self.game_performance.game_activity.game_activity_id = self.game_activity_ids[
+            self.task
+        ]
+        self.game_performance.game_activity.difficulty_level = self.difficulty_levels[
+            self.task
+        ]
+        self.game_performance.answer_correctness = self.answer_correctnesses[result]
+        self.game_performance_pub.publish(self.game_performance)
+        rospy.loginfo("Publish game performance")
 
         if self.count < 5:
             # Reaction after grading
