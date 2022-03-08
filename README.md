@@ -7,7 +7,7 @@ The repository contains two games: 1) Imitation game and 2) Emotions game. Each 
 ### Imitation game
 
 - ROS node: ./ros/scripts/migrave_game_imitation
-- Blockly game: rfh-koeln/MIGRAVE/ROS/Imitation-v2
+- Blockly game: rfh-koeln/MIGRAVE/ROS/Imitation-v3
 
 <!--- 
 ![Imitation](https://i.ibb.co/wKystWK/imitation.png)
@@ -16,7 +16,7 @@ The repository contains two games: 1) Imitation game and 2) Emotions game. Each 
 ### Emotions game
 
 - ROS node: ./ros/scripts/migrave_game_emotions
-- Blockly game: rfh-koeln/MIGRAVE/ROS/Emotions-v2
+- Blockly game: rfh-koeln/MIGRAVE/ROS/Emotions-v3
 
 ## Usage
 
