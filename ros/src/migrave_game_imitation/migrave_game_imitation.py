@@ -60,6 +60,10 @@ class MigraveGameImitation:
             "~performance_topic", "/migrave/game_performance"
         )
 
+        self.game_performance_subscriber = rospy.Subscriber(
+            self.game_performance_topic, GamePerformance, self.game_performance_callback
+        )
+
         self.game_performance_pub = rospy.Publisher(
             self.game_performance_topic, GamePerformance, queue_size=1
         )
@@ -136,6 +140,11 @@ class MigraveGameImitation:
             "wrong_again": 0,
         }
 
+    def game_performance_callback(self, msg):
+        self.game_performance = msg
+        rospy.set_param(
+            "/migrave/game_performance/participant_id", msg.person.id)
+
     def game_status_callback(self, msg):
         self.game_status = msg.data
         # start the game
@@ -167,6 +176,10 @@ class MigraveGameImitation:
         self.game_performance.game_activity.game_activity_id = "game_init"
         self.game_performance.stamp = rospy.Time.now()
         self.game_performance_pub.publish(self.game_performance)
+
+        rospy.set_param(
+            "/migrave/game_performance/game_id", self.game_id)
+
         # reset counters
         self.count = 0
         self.correct = 0
