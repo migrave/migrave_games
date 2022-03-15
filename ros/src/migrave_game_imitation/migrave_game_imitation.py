@@ -465,8 +465,21 @@ class MigraveGameImitation:
         # block/wait for ros service
         rospy.wait_for_service("/qt_robot/emotion/show")
         try:
+            # publish robot action info (start showing emotion)
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = "robot_emotion_start"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
+            # publish robot action info (finish showing emotion)
+            self.game_performance.game_activity.game_activity_id = "robot_emotion_end"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
             # call the emotion show service
             qt_emotion_show(emotion)
+
         except rospy.ServiceException as e:
             rospy.loginfo(f"Service call failed: {e}")
 
@@ -477,8 +490,21 @@ class MigraveGameImitation:
         # block/wait for ros service
         rospy.wait_for_service("/qt_robot/behavior/talkText")
         try:
+            # publish robot action info (start talking)
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = "robot_talk_start"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
             # call the talk text service
             qt_talk_text(text)
+
+            # publish robot action info (finish talking)
+            self.game_performance.game_activity.game_activity_id = "robot_talk_end"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
         except rospy.ServiceException as e:
             rospy.loginfo(f"Service call failed: {e}")
 
@@ -488,8 +514,21 @@ class MigraveGameImitation:
         # block/wait for ros service
         rospy.wait_for_service("/qt_robot/gesture/play")
         try:
+            # publish robot action info (start moving)
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = "robot_gesture_start"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
             # call the gesture play service
             qt_gesture_play(gesture, self.gesture_speed)
+
+            # publish robot action info (finish moving)
+            self.game_performance.game_activity.game_activity_id = "robot_gesture_end"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
         except rospy.ServiceException as e:
             rospy.loginfo(f"Service call failed: {e}")
 
@@ -498,7 +537,20 @@ class MigraveGameImitation:
         # block/wait for ros service
         rospy.wait_for_service("/qt_robot/audio/play")
         try:
+            # publish robot action info (start playing audio)
+            self.game_performance.answer_correctness = -1
+            self.game_performance.game_activity.game_id = self.game_id
+            self.game_performance.game_activity.game_activity_id = "robot_audio_start"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
             # call the audio play service
             qt_audio_play(audio, "")
+
+            # publish robot action info (finish audio)
+            self.game_performance.game_activity.game_activity_id = "robot_audio_end"
+            self.game_performance.stamp = rospy.Time.now()
+            self.game_performance_pub.publish(self.game_performance)
+
         except rospy.ServiceException as e:
             rospy.loginfo(f"Service call failed: {e}")
