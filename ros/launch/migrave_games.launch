@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <node pkg="migrave_games" type="migrave_game_emotions" name="migrave_game_emotions" output="screen" respawn="true">
-    </node>
-
-    <node pkg="migrave_games" type="migrave_game_imitation" name="migrave_game_imitation" output="screen" respawn="true">
-    </node>
-
-</launch>
