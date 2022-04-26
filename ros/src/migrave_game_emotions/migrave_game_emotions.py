@@ -10,6 +10,7 @@ from qt_robot_interface.srv import (
 )
 from qt_gesture_controller.srv import gesture_play
 import random
+from migrave_games.msg import TaskParameters
 
 
 class MigraveGameEmotions:
@@ -74,6 +75,10 @@ class MigraveGameEmotions:
 
         self.game_performance_pub = rospy.Publisher(
             self.game_performance_topic, GamePerformance, queue_size=1
+        )
+
+        self.task_parameters_pub = rospy.Publisher(
+            "/migrave_game_emotions/task_parameters", TaskParameters, queue_size=1
         )
 
         # Initialization
@@ -142,6 +147,9 @@ class MigraveGameEmotions:
             "wrong_2": 0,
         }
 
+        # task parameters
+        self.task_parameters = TaskParameters()
+
     def game_performance_callback(self, msg):
         self.game_performance = msg
         rospy.set_param(
@@ -181,8 +189,7 @@ class MigraveGameEmotions:
         self.game_performance.stamp = rospy.Time.now()
         self.game_performance_pub.publish(self.game_performance)
 
-        rospy.set_param(
-            "/migrave/game_performance/game_id", self.game_id)
+        rospy.set_param("/migrave/game_performance/game_id", self.game_id)
 
         # reset counters
         self.count = 0
@@ -452,15 +459,19 @@ class MigraveGameEmotions:
             self.emotion = "traurige"
             self.emotion_image = random.choice(self.images_sad)
 
-        self.emotion_pub.publish(self.emotion)
-        rospy.loginfo(f"Publish emotion: {self.emotion}")
-        rospy.sleep(2)
-
-        rospy.loginfo(f"Show image: {self.emotion_image}")
-        self.migrave_talk_text("Schau auf das Tablet!")
+        # self.emotion_pub.publish(self.emotion)
+        # rospy.loginfo(f"Publish emotion: {self.emotion}")
         # rospy.sleep(2)
-        self.tablet_image_pub.publish(self.emotion_image)
-        rospy.sleep(2)
+
+        # rospy.loginfo(f"Show image: {self.emotion_image}")
+        # rospy.sleep(2)
+        # self.tablet_image_pub.publish(self.emotion_image)
+        # rospy.sleep(2)
+
+        self.migrave_talk_text("Schau auf das Tablet!")
+        self.task_parameters.emotion = self.emotion
+        self.task_parameters.image_1 = self.emotion_image
+        self.task_parameters_pub.publish(self.task_parameters)
 
     def start_new_round(self):
         self.image_happy = random.choice(self.images_happy)
@@ -510,19 +521,26 @@ class MigraveGameEmotions:
         rospy.loginfo(f"Order of the correct image: {self.correct_image}")
         rospy.loginfo(f"Correct emotion: {self.emotion}")
 
-        self.emotion_pub.publish(self.emotion)
+        # self.emotion_pub.publish(self.emotion)
         # rospy.sleep(1)
         self.migrave_talk_text("Schau auf das Tablet!")
-        rospy.sleep(1)
+        # rospy.sleep(1)
 
-        self.tablet_image_pub.publish(self.images[0])
-        rospy.sleep(1)
-        self.tablet_image_pub.publish(self.images[1])
-        rospy.sleep(1)
-        self.tablet_image_pub.publish(self.image_x)
-        rospy.sleep(1)
-        self.correct_image_pub.publish(str(self.correct_image))
-        rospy.sleep(1)
+        # self.tablet_image_pub.publish(self.images[0])
+        # rospy.sleep(1)
+        # self.tablet_image_pub.publish(self.images[1])
+        # rospy.sleep(1)
+        # self.tablet_image_pub.publish(self.image_x)
+        # rospy.sleep(1)
+        # self.correct_image_pub.publish(str(self.correct_image))
+        # rospy.sleep(1)
+
+        self.task_parameters.emotion = self.emotion
+        self.task_parameters.image_1 = self.images[0]
+        self.task_parameters.image_2 = self.images[1]
+        self.task_parameters.image_x = self.image_x
+        self.task_parameters.correct_image = str(self.correct_image)
+        self.task_parameters_pub.publish(self.task_parameters)
 
     def finish_one_task(self):
         self.migrave_show_emotion("showing_smile")
