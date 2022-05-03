@@ -279,14 +279,14 @@ class MigraveGameEmotions:
             "wrong_1": "Schau nochmal genau hin!",
             "wrong_2": "Schau nochmal genau hin!",
         }
-        feedback_gestures = {
-            "right": "QT/clapping",
-            "right_1": "QT/clapping",
-            "right_2": "QT/clapping",
-            "wrong": "",
-            "wrong_1": "",
-            "wrong_2": "",
-        }
+        # feedback_gestures = {
+        #     "right": "QT/clapping",
+        #     "right_1": "QT/clapping",
+        #     "right_2": "QT/clapping",
+        #     "wrong": "",
+        #     "wrong_1": "",
+        #     "wrong_2": "",
+        # }
 
         self.game_performance.stamp = rospy.Time.now()
         self.game_performance.game_activity.game_id = self.game_id
@@ -306,8 +306,8 @@ class MigraveGameEmotions:
             self.migrave_show_emotion(emotion)
             text = feedback_texts[result]
             self.migrave_talk_text(text)
-            gesture = feedback_gestures[result]
-            self.migrave_gesture_play(gesture)
+            # gesture = feedback_gestures[result]
+            # self.migrave_gesture_play(gesture)
 
             if self.result == "right":
                 self.count += 1
@@ -365,8 +365,8 @@ class MigraveGameEmotions:
             self.migrave_show_emotion(emotion)
             text = feedback_texts[result]
             self.migrave_talk_text(text)
-            gesture = feedback_gestures[result]
-            self.migrave_gesture_play(gesture)
+            # gesture = feedback_gestures[result]
+            # self.migrave_gesture_play(gesture)
 
             if self.count == 5 and self.correct == 4:
                 rospy.loginfo("80% correctness case")

@@ -261,12 +261,12 @@ class MigraveGameImitation:
             "wrong": "Schau nochmal genau hin!",
             "wrong_again": "Schau nochmal genau hin!",
         }
-        feedback_gestures = {
-            "right": "QT/clapping",
-            "right_after_wrong": "QT/clapping",
-            "wrong": "",
-            "wrong_again": "",
-        }
+        # feedback_gestures = {
+        #     "right": "QT/clapping",
+        #     "right_after_wrong": "QT/clapping",
+        #     "wrong": "",
+        #     "wrong_again": "",
+        # }
         result = self.result
 
         # Publish game performance when getting the result
@@ -293,8 +293,8 @@ class MigraveGameImitation:
             text = feedback_texts[result]
             self.migrave_talk_text(text)
 
-            gesture = feedback_gestures[result]
-            self.migrave_gesture_play(gesture)
+            # gesture = feedback_gestures[result]
+            # self.migrave_gesture_play(gesture)
 
             if self.result == "right":
                 self.count += 1
@@ -355,8 +355,8 @@ class MigraveGameImitation:
             self.migrave_show_emotion(emotion)
             text = feedback_texts[result]
             self.migrave_talk_text(text)
-            gesture = feedback_gestures[result]
-            self.migrave_gesture_play(gesture)
+            # gesture = feedback_gestures[result]
+            # self.migrave_gesture_play(gesture)
             if self.count == 5 and self.correct == 4:
                 rospy.loginfo("80% correctness case")
                 if result == "right":
