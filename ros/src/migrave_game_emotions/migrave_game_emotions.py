@@ -470,8 +470,11 @@ class MigraveGameEmotions:
 
         self.migrave_talk_text("Schau auf das Tablet!")
         self.task_parameters.emotion = self.emotion
+        self.loginfo(f"Correct emotion: {self.emotion}")
         self.task_parameters.image_1 = self.emotion_image
+        self.loginfo(f"Correct image: {self.emotion_image}")
         self.task_parameters_pub.publish(self.task_parameters)
+        self.loginfo(f"Publish: {self.emotion}, {self.emotion_image}")
 
     def start_new_round(self):
         self.image_happy = random.choice(self.images_happy)
