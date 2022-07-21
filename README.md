@@ -27,3 +27,28 @@ roslaunch migrave_games migrave_games.launch
 ```
 
 Use the Educator app in the Educator tablet to choose one game and run it. 
+
+## Project Structure
+
+```
+.
+├── CMakeLists.txt
+├── README.md
+├── package.xml
+├── ros
+│   ├── launch
+│   │   └── migrave_games.launch
+│   ├── msg
+│   │   └── TaskParameters.msg
+│   ├── scripts
+│   │   ├── migrave_game_emotions
+│   │   └── migrave_game_imitation
+│   └── src
+│       ├── migrave_game_emotions
+│       │   ├── __init__.py
+│       │   └── migrave_game_emotions.py
+│       └── migrave_game_imitation
+│           ├── __init__.py
+│           └── migrave_game_imitation.py
+└── setup.py
+```
