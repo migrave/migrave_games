@@ -1,9 +1,22 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="game_config_dir_path" default="$(find migrave_behaviour_manager)/config/games" />
+    <arg name="game_performance_topic" default="/migrave/game_performance" />
+
     <node pkg="migrave_games" type="migrave_game_emotions" name="migrave_game_emotions" output="screen" respawn="true">
+        <param name="game_config_dir_path" type="str" value="$(arg game_config_dir_path)" />
+        <param name="game_id" type="str" value="emotions" />
+        <param name="game_status_topic" type="str" value="/migrave_game_emotions/status" />
+        <param name="game_answer_topic" type="str" value="/migrave_game_emotions/answer" />
+        <param name="game_performance_topic" type="str" value="$(arg game_performance_topic)" />
     </node>
 
     <node pkg="migrave_games" type="migrave_game_imitation" name="migrave_game_imitation" output="screen" respawn="true">
+        <param name="game_config_dir_path" type="str" value="$(arg game_config_dir_path)" />
+        <param name="game_id" type="str" value="imitation" />
+        <param name="game_status_topic" type="str" value="/migrave_game_imitation/status" />
+        <param name="game_answer_topic" type="str" value="/migrave_game_imitation/answer" />
+        <param name="game_performance_topic" type="str" value="$(arg game_performance_topic)" />
     </node>
 
 </launch>
