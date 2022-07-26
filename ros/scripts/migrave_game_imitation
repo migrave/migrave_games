@@ -3,10 +3,21 @@
 import rospy
 
 from migrave_game_imitation.migrave_game_imitation import MigraveGameImitation
-if __name__ == "__main__":
 
-    game_status_topic = "/migrave_game_imitation/status"
-    game_answer_topic = "/migrave_game_imitation/answer"
-    game = MigraveGameImitation(game_status_topic, game_answer_topic)
+if __name__ == "__main__":
     rospy.init_node("migrave_game_imitation", anonymous=True)
-    rospy.spin()
+    game_config_dir_path = rospy.get_param("~game_config_dir_path", "")
+    game_id = rospy.get_param("~game_id", "imitation")
+    game_status_topic = rospy.get_param("~game_status_topic",
+                                        "/migrave_game_imitation/status")
+    game_answer_topic = rospy.get_param("~game_answer_topic",
+                                        "/migrave_game_imitation/answer")
+    game_performance_topic = rospy.get_param("~game_performance_topic",
+                                             "/migrave/game_performance")
+    game = MigraveGameImitation(game_config_dir_path=game_config_dir_path,
+                                game_id=game_id,
+                                game_status_topic=game_status_topic,
+                                game_answer_topic=game_answer_topic,
+                                game_performance_topic=game_performance_topic)
+    while not rospy.is_shutdown():
+        rospy.sleep(0.1)
