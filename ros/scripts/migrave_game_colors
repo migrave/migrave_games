@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import rospy
+
+from migrave_game_library.colors import MigraveGameColors
+
+if __name__ == "__main__":
+    rospy.init_node("migrave_game_colors")
+    game_config_dir_path = rospy.get_param("~game_config_dir_path", "")
+    game_id = rospy.get_param("~game_id", "colors")
+    game_status_topic = rospy.get_param("~game_status_topic",
+                                        "/migrave_game_colors/status")
+    game_answer_topic = rospy.get_param("~game_answer_topic",
+                                        "/migrave_game_colors/answer")
+    game_performance_topic = rospy.get_param("~game_performance_topic",
+                                             "/migrave/game_performance")
+    game = MigraveGameColors(game_config_dir_path=game_config_dir_path,
+                             game_id=game_id,
+                             game_status_topic=game_status_topic,
+                             game_answer_topic=game_answer_topic,
+                             game_performance_topic=game_performance_topic)
+    while not rospy.is_shutdown():
+        rospy.sleep(0.1)
